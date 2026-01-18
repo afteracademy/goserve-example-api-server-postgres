@@ -21,7 +21,7 @@ func TestIntegrationAuthController_SignupSuccess(t *testing.T) {
 		t.Fatalf("could not create apikey: %v", err)
 	}
 
-	body := `{"email":"test@abc.com","password":123456,"name":"test name"}`
+	body := `{"email":"test@abc.com","password":"123456","name":"test name"}`
 
 	req, err := http.NewRequest("POST", "/auth/signup/basic", bytes.NewBuffer([]byte(body)))
 	if err != nil {

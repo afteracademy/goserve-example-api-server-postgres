@@ -3,6 +3,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+    container_name: goserve_example_api_server_postgres
     restart: unless-stopped
     env_file: .env
     ports:
@@ -18,14 +19,15 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
+      POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_USER_PWD}
-      POSTGRES_DB: ${DB_NAME}
     ports:
       - '${DB_PORT}:5432'
     volumes:
       - dbdata:/data/db
       # optional pg seed scripts
+      - ./.extra/setup/init-test-db.sql:/docker-entrypoint-initdb.d/init-test-db.sql:ro
       - ./.extra/setup/pgseed.sql:/docker-entrypoint-initdb.d/pgseed.sql:ro
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $$POSTGRES_USER -d $$DB_NAME"]
@@ -48,6 +50,20 @@ services:
       timeout: 3s
       retries: 5
 
+  migrate:
+    image: migrate/migrate
+    env_file: .env
+    volumes:
+      - ./migrations:/migrations
+    depends_on:
+      postgres:
+        condition: service_healthy
+    command:
+      [
+        "-path", "/migrations",
+        "-database", "postgres://${TEST_DB_USER}:${TEST_DB_USER_PWD}@postgres:5432/${TEST_DB_NAME}?sslmode=disable",
+        "up"
+      ]
 volumes:
   dbdata:
   cache:
