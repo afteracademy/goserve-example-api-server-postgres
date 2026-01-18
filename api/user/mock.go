@@ -70,3 +70,19 @@ func (m *MockService) IsEmailExists(email string) (bool, error) {
 	args := m.Called(email)
 	return args.Bool(0), args.Error(1)
 }
+
+func (m *MockService) CreateRole(code model.RoleCode) (*model.Role, error) {
+	args := m.Called(code)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*model.Role), args.Error(1)
+}
+
+func (m *MockService) DeleteRole(role *model.Role) (bool, error) {
+	args := m.Called(role)
+	if args.Get(0) == nil {
+		return false, args.Error(1)
+	}
+	return args.Bool(0), args.Error(1)
+}
