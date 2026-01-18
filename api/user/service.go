@@ -21,6 +21,11 @@ type Service interface {
 	CreateUser(
 		email string, password string, name string, profilePicURL *string, roles []*model.Role,
 	) (*model.User, error)
+
+	/*--------only for tests----------*/
+	CreateRole(code model.RoleCode) (*model.Role, error)
+	DeleteRole(role *model.Role) (bool, error)
+	/*--------------------------------*/
 }
 
 type service struct {
@@ -469,3 +474,56 @@ func (s *service) DeleteUserByEmail(ctx context.Context, email string) (bool, er
 
 	return tag.RowsAffected() > 0, nil
 }
+
+func (s *service) CreateRole(code model.RoleCode) (*model.Role, error) {
+	ctx := context.Background()
+
+	var role model.Role
+
+	query := `
+		INSERT INTO roles (
+			code
+		)
+		VALUES ($1)
+		RETURNING
+			id,
+			code,
+			status,
+			created_at,
+			updated_at
+	`
+
+	err := s.db.QueryRow(
+		ctx,
+		query,
+		code,
+	).Scan(
+		&role.ID,
+		&role.Code,
+		&role.Status,
+		&role.CreatedAt,
+		&role.UpdatedAt,
+	)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &role, nil
+}
+
+func (s *service) DeleteRole(role *model.Role) (bool, error) {
+	ctx := context.Background()
+
+	query := `
+		DELETE FROM roles
+		WHERE id = $1
+	`
+
+	tag, err := s.db.Exec(ctx, query, role.ID)
+	if err != nil {
+		return false, err
+	}
+
+	return tag.RowsAffected() > 0, nil
+}	
