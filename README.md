@@ -38,6 +38,9 @@ The goal is to make each API independent from one another and only share service
 
 The APIs will have separate directory based on the endpoint. Example `blog` and `blogs` will have seperate directory whereas `blog`, `blog/author`, and `blog/editor` will share common resources and will live inside same directory.
 
+## Know More on goserve framework
+- [GitHub - afteracademy/goserve](https://github.com/afteracademy/goserve) 
+
 ### Startup Flow
 cmd/main → startup/server → module, mongo, redis, router → api/[feature]/middlewares → api/[feature]/controller -> api/[feature]/service, authentication, authorization → handlers → sender
 
