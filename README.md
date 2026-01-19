@@ -9,10 +9,11 @@
 
 ## Create A Blog Service 
 
-This project is a fully production-ready solution designed to implement best practices for building performant and secure backend REST API services. It provides a robust architectural framework to ensure consistency and maintain high code quality. The architecture emphasizes feature separation, facilitating easier unit and integration testing.
+This project is a fully production-ready solution designed to implement best practices for building performant and secure backend REST API services. It provides a robust architectural framework to ensure consistency and maintain high code quality. The architecture emphasizes feature separation, facilitating easier unit and integration testing. It is built using the `goserve` framework, which offers essential functionalities such as authentication, authorization, database connectivity, and caching.
 
-## Framework
+## Framework Libs
 - Go
+- goserve v2
 - Gin
 - jwt
 - postgres
@@ -23,6 +24,8 @@ This project is a fully production-ready solution designed to implement best pra
 - Crypto
 
 **Highlights**
+- REST API design
+- goserve framework usage
 - API key support
 - Token based Authentication
 - Role based Authorization
@@ -119,7 +122,7 @@ If having any issue
 go mod tidy
 ```
 
-Keep the docker container for `mongo` and `redis` running and **stop** the `goserve` docker container
+Keep the docker container for `postgres` and `redis` running and **stop** the `goserve_example_api_server_postgres` docker container
 
 Change the following hosts in the **.env** and **.test.env**
 - DB_HOST=localhost
@@ -156,73 +159,19 @@ Information about the framework
 package model
 
 import (
-  "context"
-  "time"
+	"time"
 
-  "github.com/go-playground/validator/v10"
-  "github.com/afteracademy/goserve/v2/mongo"
-  "go.mongodb.org/mongo-driver/bson"
-  "go.mongodb.org/mongo-driver/bson/primitive"
-  mongod "go.mongodb.org/mongo-driver/mongo"
+	"github.com/google/uuid"
 )
 
-const CollectionName = "samples"
-
 type Sample struct {
-  ID        primitive.ObjectID `bson:"_id,omitempty" validate:"-"`
-  Field     string             `bson:"field" validate:"required"`
-  Status    bool               `bson:"status" validate:"required"`
-  CreatedAt time.Time          `bson:"createdAt" validate:"required"`
-  UpdatedAt time.Time          `bson:"updatedAt" validate:"required"`
-}
-
-func NewSample(field string) (*Sample, error) {
-  time := time.Now()
-  doc := Sample{
-    Field:     field,
-    Status:    true,
-    CreatedAt: time,
-    UpdatedAt: time,
-  }
-  if err := doc.Validate(); err != nil {
-    return nil, err
-  }
-  return &doc, nil
-}
-
-func (doc *Sample) GetValue() *Sample {
-  return doc
-}
-
-func (doc *Sample) Validate() error {
-  validate := validator.New()
-  return validate.Struct(doc)
-}
-
-func (*Sample) EnsureIndexes(db mongo.Database) {
-  indexes := []mongod.IndexModel{
-    {
-      Keys: bson.D{
-        {Key: "_id", Value: 1},
-        {Key: "status", Value: 1},
-      },
-    },
-  }
-  
-  mongo.NewQueryBuilder[Sample](db, CollectionName).Query(context.Background()).CreateIndexes(indexes)
+	ID        uuid.UUID  // id 
+	Field     string     // field
+	Status    bool       // status
+	CreatedAt time.Time  // created_at
+	UpdatedAt time.Time  // updated_at
 }
 ```
-
-#### Notes: The Model implements the interface 
-`github.com/afteracademy/goserve/v2/mongo/database`
-
-```golang
-type Document[T any] interface {
-  EnsureIndexes(Database)
-  GetValue() *T
-  Validate() error
-}
-``` 
 
 ### DTO
 `api/sample/dto/create_sample.go`
@@ -231,42 +180,29 @@ type Document[T any] interface {
 package dto
 
 import (
-  "fmt"
-  "time"
+	"time"
 
-  "github.com/go-playground/validator/v10"
-  "go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/go-playground/validator/v10"
+	"github.com/google/uuid"
+	"github.com/afteracademy/goserve/v2/utility"
 )
 
 type InfoSample struct {
-  ID        primitive.ObjectID `json:"_id" binding:"required"`
-  Field     string             `json:"field" binding:"required"`
-  CreatedAt time.Time          `json:"createdAt" binding:"required"`
+	ID        uuid.UUID `json:"_id" binding:"required"`
+	Field     string    `json:"field" binding:"required"`
+	CreatedAt time.Time `json:"createdAt" binding:"required"`
 }
 
 func EmptyInfoSample() *InfoSample {
-  return &InfoSample{}
+	return &InfoSample{}
 }
 
 func (d *InfoSample) GetValue() *InfoSample {
-  return d
+	return d
 }
 
 func (d *InfoSample) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-  var msgs []string
-  for _, err := range errs {
-    switch err.Tag() {
-    case "required":
-      msgs = append(msgs, fmt.Sprintf("%s is required", err.Field()))
-    case "min":
-      msgs = append(msgs, fmt.Sprintf("%s must be min %s", err.Field(), err.Param()))
-    case "max":
-      msgs = append(msgs, fmt.Sprintf("%s must be max %s", err.Field(), err.Param()))
-    default:
-      msgs = append(msgs, fmt.Sprintf("%s is invalid", err.Field()))
-    }
-  }
-  return msgs, nil
+	return utility.FormatValidationErrors(errs), nil
 }
 ```
 
@@ -287,42 +223,64 @@ type Dto[T any] interface {
 package sample
 
 import (
+	"context"
+
   "github.com/afteracademy/goserve-example-api-server-postgres/api/sample/dto"
-  "github.com/afteracademy/goserve-example-api-server-postgres/api/sample/model"
-  "github.com/afteracademy/goserve/v2/mongo"
-  "github.com/afteracademy/goserve/v2/network"
-  "github.com/afteracademy/goserve/v2/redis"
-  "go.mongodb.org/mongo-driver/bson"
-  "go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/afteracademy/goserve-example-api-server-postgres/api/Sample/model"
+	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/redis"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
 )
 
 type Service interface {
-  FindSample(id primitive.ObjectID) (*model.Sample, error)
+	FindSample(id uuid.UUID) (*model.Sample, error)
 }
 
 type service struct {
-  network.BaseService
-  sampleQueryBuilder mongo.QueryBuilder[model.Sample]
-  infoSampleCache    redis.Cache[dto.InfoSample]
+	network.BaseService
+	db              *pgxpool.Pool
+	infoSampleCache     redis.Cache[dto.InfoSample]
 }
 
-func NewService(db mongo.Database, store redis.Store) Service {
-  return &service{
-    BaseService:  network.NewBaseService(),
-    sampleQueryBuilder: mongo.NewQueryBuilder[model.Sample](db, model.CollectionName),
-    infoSampleCache: redis.NewCache[dto.InfoSample](store),
-  }
+func NewService(db *pgxpool.Pool, store redis.Store) Service {
+	return &service{
+		BaseService:     network.NewBaseService(),
+	  db:              db,
+		infoSampleCache:     redis.NewCache[dto.InfoSample](store),
+	}
 }
 
-func (s *service) FindSample(id primitive.ObjectID) (*model.Sample, error) {
-  filter := bson.M{"_id": id}
+func (s *service) FindSample(id uuid.UUID) (*model.Sample, error) {
+  ctx := context.Background()
+	
+	query := `
+		SELECT
+			id,
+			field,
+			status,
+			created_at,
+			updated_at
+		FROM samples
+		WHERE id = $1
+	`
 
-  msg, err := s.sampleQueryBuilder.SingleQuery().FindOne(filter, nil)
-  if err != nil {
-    return nil, err
-  }
+	var m model.Sample
 
-  return msg, nil
+	err := s.db.QueryRow(ctx, query, id).
+		Scan(
+			&m.ID,
+			&m.Field,
+			&m.Status,
+			&m.CreatedAt,
+			&m.UpdatedAt,
+		)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &m, nil
 }
 ```
 
@@ -335,7 +293,6 @@ type BaseService interface {
 }
 ``` 
 
-- Database Query: `mongo.QueryBuilder[model.Sample]` provide the methods to make common mongo queries for the model `model.Sample`
 - Redis Cache: `redis.Cache[dto.InfoSample]` provide the methods to make common redis queries for the DTO `dto.InfoSample`
 
 ### Controller
@@ -345,56 +302,56 @@ type BaseService interface {
 package sample
 
 import (
-  "github.com/gin-gonic/gin"
-  "github.com/afteracademy/goserve-example-api-server-postgres/api/sample/dto"
-  "github.com/afteracademy/goserve-example-api-server-postgres/common"
-  coredto "github.com/afteracademy/goserve/v2/dto"
-  "github.com/afteracademy/goserve/v2/network"
-  "github.com/afteracademy/goserve-example-api-server-postgres/utils"
+	"github.com/afteracademy/goserve-example-api-server-postgres/api/sample/dto"
+	"github.com/afteracademy/goserve-example-api-server-postgres/common"
+	coredto "github.com/afteracademy/goserve/v2/dto"
+	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/utility"
+	"github.com/gin-gonic/gin"
 )
 
 type controller struct {
-  network.BaseController
-  common.ContextPayload
-  service Service
+	network.BaseController
+	common.ContextPayload
+	service Service
 }
 
 func NewController(
-  authMFunc network.AuthenticationProvider,
-  authorizeMFunc network.AuthorizationProvider,
-  service Service,
+	authMFunc network.AuthenticationProvider,
+	authorizeMFunc network.AuthorizationProvider,
+	service Service,
 ) network.Controller {
-  return &controller{
-    BaseController: network.NewBaseController("/sample", authMFunc, authorizeMFunc),
-    ContextPayload: common.NewContextPayload(),
-    service:  service,
-  }
+	return &controller{
+		BaseController: network.NewBaseController("/sample", authMFunc, authorizeMFunc),
+		ContextPayload: common.NewContextPayload(),
+		service:  service,
+	}
 }
 
 func (c *controller) MountRoutes(group *gin.RouterGroup) {
-  group.GET("/id/:id", c.getSampleHandler)
+	group.GET("/id/:id", c.getSampleHandler)
 }
 
 func (c *controller) getSampleHandler(ctx *gin.Context) {
-  mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
-  if err != nil {
-    c.Send(ctx).BadRequestError(err.Error(), err)
-    return
-  }
+	uuidParam, err := network.ReqParams(ctx, coredto.EmptyUUID())
+	if err != nil {
+		c.Send(ctx).BadRequestError(err.Error(), err)
+		return
+	}
 
-  sample, err := c.service.FindSample(mongoId.ID)
-  if err != nil {
-    c.Send(ctx).NotFoundError("sample not found", err)
-    return
-  }
+	sample, err := c.service.FindSample(uuidParam.ID)
+	if err != nil {
+		c.Send(ctx).NotFoundError("sample not found", err)
+		return
+	}
 
-  data, err := utils.MapTo[dto.InfoSample](sample)
-  if err != nil {
-    c.Send(ctx).InternalServerError("something went wrong", err)
-    return
-  }
+	data, err := utility.MapTo[dto.InfoSample](sample)
+	if err != nil {
+		c.Send(ctx).InternalServerError("something went wrong", err)
+		return
+	}
 
-  c.Send(ctx).SuccessDataResponse("success", data)
+	c.Send(ctx).SuccessDataResponse("success", data)
 }
 ```
 
@@ -447,21 +404,6 @@ func (m *module) Controllers() []network.Controller {
     ...
     sample.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), sample.NewService(m.DB, m.Store)),
   }
-}
-```
-
-### Indexing (If Needed)
-`startup/indexes.go`
-
-```go
-import (
-  ...
-  sample "github.com/afteracademy/goserve-example-api-server-postgres/api/sample/model"
-)
-
-func EnsureDbIndexes(db mongo.Database) {
-  go mongo.Document[sample.Sample](&sample.Sample{}).EnsureIndexes(db)
-  ...
 }
 ```
 
