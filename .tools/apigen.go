@@ -56,44 +56,66 @@ func generateService(featureDir, featureName string) error {
 	template := fmt.Sprintf(`package %s
 
 import (
+	"context"
+
   "github.com/afteracademy/goserve-example-api-server-postgres/api/%s/dto"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/%s/model"
-	"github.com/afteracademy/goserve/v2/mongo"
 	"github.com/afteracademy/goserve/v2/network"
 	"github.com/afteracademy/goserve/v2/redis"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/google/uuid"
 )
 
 type Service interface {
-	Find%s(id primitive.ObjectID) (*model.%s, error)
+	Find%s(id uuid.UUID) (*model.%s, error)
 }
 
 type service struct {
 	network.BaseService
-	%sQueryBuilder mongo.QueryBuilder[model.%s]
-	info%sCache    redis.Cache[dto.Info%s]
+	db              *pgxpool.Pool
+	info%sCache     redis.Cache[dto.Info%s]
 }
 
-func NewService(db mongo.Database, store redis.Store) Service {
+func NewService(db *pgxpool.Pool, store redis.Store) Service {
 	return &service{
-		BaseService:  network.NewBaseService(),
-		%sQueryBuilder: mongo.NewQueryBuilder[model.%s](db, model.CollectionName),
-		info%sCache: redis.NewCache[dto.Info%s](store),
+		BaseService:     network.NewBaseService(),
+	  db:              db,
+		info%sCache:     redis.NewCache[dto.Info%s](store),
 	}
 }
 
-func (s *service) Find%s(id primitive.ObjectID) (*model.%s, error) {
-	filter := bson.M{"_id": id}
+func (s *service) Find%s(id uuid.UUID) (*model.%s, error) {
+  ctx := context.Background()
+	
+	query := `+"`"+`
+		SELECT
+			id,
+			field,
+			status,
+			created_at,
+			updated_at
+		FROM %ss
+		WHERE id = $1
+	`+"`"+`
 
-	msg, err := s.%sQueryBuilder.SingleQuery().FindOne(filter, nil)
+	var m model.%s
+
+	err := s.db.QueryRow(ctx, query, id).
+		Scan(
+			&m.ID,
+			&m.Field,
+			&m.Status,
+			&m.CreatedAt,
+			&m.UpdatedAt,
+		)
+
 	if err != nil {
 		return nil, err
 	}
 
-	return msg, nil
+	return &m, nil
 }
-`, featureLower, featureLower, featureLower, featureCaps, featureCaps, featureLower, featureCaps, featureCaps, featureCaps, featureLower, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureLower)
+`, featureLower, featureLower, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureLower, featureCaps)
 
 	return os.WriteFile(servicePath, []byte(template), os.ModePerm)
 }
@@ -106,12 +128,12 @@ func generateController(featureDir, featureName string) error {
 	template := fmt.Sprintf(`package %s
 
 import (
-	"github.com/gin-gonic/gin"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/%s/dto"
 	"github.com/afteracademy/goserve-example-api-server-postgres/common"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/network"
-	"github.com/afteracademy/goserve-example-api-server-postgres/utils"
+	"github.com/afteracademy/goserve/v2/utility"
+	"github.com/gin-gonic/gin"
 )
 
 type controller struct {
@@ -137,19 +159,19 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) get%sHandler(ctx *gin.Context) {
-	mongoId, err := network.ReqParams(ctx, coredto.EmptyMongoId())
+	uuidParam, err := network.ReqParams(ctx, coredto.EmptyUUID())
 	if err != nil {
 		c.Send(ctx).BadRequestError(err.Error(), err)
 		return
 	}
 
-	%s, err := c.service.Find%s(mongoId.ID)
+	%s, err := c.service.Find%s(uuidParam.ID)
 	if err != nil {
 		c.Send(ctx).NotFoundError("%s not found", err)
 		return
 	}
 
-	data, err := utils.MapTo[dto.Info%s](%s)
+	data, err := utility.MapTo[dto.Info%s](%s)
 	if err != nil {
 		c.Send(ctx).InternalServerError("something went wrong", err)
 		return
@@ -175,64 +197,20 @@ func generateModel(featureDir, featureName string) error {
 	tStr := `package model
 
 import (
-	"context"
 	"time"
 
-	"github.com/go-playground/validator/v10"
-	"github.com/afteracademy/goserve/v2/mongo"
-	"go.mongodb.org/mongo-driver/bson"
-	"go.mongodb.org/mongo-driver/bson/primitive"
-	mongod "go.mongodb.org/mongo-driver/mongo"
+	"github.com/google/uuid"
 )
 
-const CollectionName = "%ss"
-
 type %s struct {
-	ID        primitive.ObjectID ` + "`" + `bson:"_id,omitempty" validate:"-"` + "`" + `
-	Field     string             ` + "`" + `bson:"field" validate:"required"` + "`" + `
-	Status    bool               ` + "`" + `bson:"status" validate:"required"` + "`" + `
-	CreatedAt time.Time          ` + "`" + `bson:"createdAt" validate:"required"` + "`" + `
-	UpdatedAt time.Time          ` + "`" + `bson:"updatedAt" validate:"required"` + "`" + `
-}` + `
-
-func New%s(field string) (*%s, error) {
-	time := time.Now()
-	doc := %s{
-		Field:     field,
-		Status:    true,
-		CreatedAt: time,
-		UpdatedAt: time,
-	}
-	if err := doc.Validate(); err != nil {
-		return nil, err
-	}
-	return &doc, nil
+	ID        uuid.UUID  // id 
+	Field     string     // field
+	Status    bool       // status
+	CreatedAt time.Time  // created_at
+	UpdatedAt time.Time  // updated_at
 }
-
-func (doc *%s) GetValue() *%s {
-	return doc
-}
-
-func (doc *%s) Validate() error {
-	validate := validator.New()
-	return validate.Struct(doc)
-}
-
-func (*%s) EnsureIndexes(db mongo.Database) {
-	indexes := []mongod.IndexModel{
-		{
-			Keys: bson.D{
-				{Key: "_id", Value: 1},
-				{Key: "status", Value: 1},
-			},
-		},
-	}
-	
-	mongo.NewQueryBuilder[%s](db, CollectionName).Query(context.Background()).CreateIndexes(indexes)
-}
-
 `
-	template := fmt.Sprintf(tStr, featureLower, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps)
+	template := fmt.Sprintf(tStr, featureCaps)
 
 	return os.WriteFile(modelPath, []byte(template), os.ModePerm)
 }
@@ -250,17 +228,17 @@ func generateDto(featureDir, featureName string) error {
 	tStr := `package dto
 
 import (
-	"fmt"
 	"time"
 
 	"github.com/go-playground/validator/v10"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
+	"github.com/afteracademy/goserve/v2/utility"
 )
 
 type Info%s struct {
-	ID        primitive.ObjectID ` + "`" + `json:"_id" binding:"required"` + "`" + `
-	Field     string             ` + "`" + `json:"field" binding:"required"` + "`" + `
-	CreatedAt time.Time          ` + "`" + `json:"createdAt" binding:"required"` + "`" + `
+	ID        uuid.UUID ` + "`" + `json:"_id" binding:"required"` + "`" + `
+	Field     string    ` + "`" + `json:"field" binding:"required"` + "`" + `
+	CreatedAt time.Time ` + "`" + `json:"createdAt" binding:"required"` + "`" + `
 }
 
 func EmptyInfo%s() *Info%s {
@@ -272,20 +250,7 @@ func (d *Info%s) GetValue() *Info%s {
 }
 
 func (d *Info%s) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	var msgs []string
-	for _, err := range errs {
-		switch err.Tag() {
-		case "required":
-			msgs = append(msgs, fmt.Sprintf("%%s is required", err.Field()))
-		case "min":
-			msgs = append(msgs, fmt.Sprintf("%%s must be min %%s", err.Field(), err.Param()))
-		case "max":
-			msgs = append(msgs, fmt.Sprintf("%%s must be max %%s", err.Field(), err.Param()))
-		default:
-			msgs = append(msgs, fmt.Sprintf("%%s is invalid", err.Field()))
-		}
-	}
-	return msgs, nil
+	return utility.FormatValidationErrors(errs), nil
 }
 `
 	template := fmt.Sprintf(tStr, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps)

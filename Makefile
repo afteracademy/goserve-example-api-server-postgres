@@ -22,12 +22,4 @@ setup:
 # make apigen ARGS="sample"
 apigen:
 	go run .tools/apigen.go $(ARGS)
-
-test-docker:
-	@set -e; \
-	docker compose --env-file .test.env -f docker-compose.test.yml build postgres-test redis-test; \
-	docker compose --env-file .test.env -f docker-compose.test.yml up -d postgres-test redis-test; \
-	docker compose --env-file .test.env -f docker-compose.test.yml run --rm migrate-test; \
-	docker compose --env-file .test.env -f docker-compose.test.yml build goserver-test; \
-	docker compose --env-file .test.env -f docker-compose.test.yml run --rm goserver-test; \
-	docker compose --env-file .test.env -f docker-compose.test.yml down -v
+	
