@@ -5,14 +5,14 @@ import (
 
 	"github.com/afteracademy/goserve/v2/utility"
 	"github.com/go-playground/validator/v10"
-	"go.mongodb.org/mongo-driver/bson/primitive"
+	"github.com/google/uuid"
 )
 
 type Message struct {
-	ID        primitive.ObjectID `json:"id" binding:"required"`
-	Type      string             `json:"type" binding:"required"`
-	Msg       string             `json:"msg" binding:"required"`
-	CreatedAt time.Time          `json:"createdAt" binding:"required"`
+	ID        uuid.UUID `json:"id" binding:"required"`
+	Type      string    `json:"type" binding:"required"`
+	Msg       string    `json:"msg" binding:"required"`
+	CreatedAt time.Time `json:"createdAt" binding:"required"`
 }
 
 func EmptyMessage() *Message {

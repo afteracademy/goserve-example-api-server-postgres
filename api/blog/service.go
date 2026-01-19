@@ -42,7 +42,7 @@ func NewService(db *pgxpool.Pool, store redis.Store, userService user.Service) S
 }
 
 func (s *service) SetBlogDtoCacheById(blog *dto.BlogPublic) error {
-	key := "blog_" + blog.ID.Hex()
+	key := "blog_" + blog.ID.String()
 	return s.publicBlogCache.SetJSON(key, blog, time.Duration(10*time.Minute))
 }
 

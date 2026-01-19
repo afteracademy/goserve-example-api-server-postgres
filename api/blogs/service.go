@@ -13,7 +13,6 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
-	"go.mongodb.org/mongo-driver/bson"
 )
 
 type Service interface {
@@ -222,7 +221,7 @@ func (s *service) GetSimilarBlogs(
 	return items, nil
 }
 
-func (s *service) getPublicPaginated(filter bson.M, p *coredto.Pagination) ([]*dto.BlogItem, error) {
+func (s *service) GetPublicPaginated(p *coredto.Pagination) ([]*dto.BlogItem, error) {
 	query := `
 		SELECT
 			id,

@@ -42,7 +42,7 @@ The APIs will have separate directory based on the endpoint. Example `blog` and 
 - [GitHub - afteracademy/goserve](https://github.com/afteracademy/goserve) 
 
 ### Startup Flow
-cmd/main → startup/server → module, mongo, redis, router → api/[feature]/middlewares → api/[feature]/controller -> api/[feature]/service, authentication, authorization → handlers → sender
+cmd/main → startup/server → module, postgres, redis, router → api/[feature]/middlewares → api/[feature]/controller -> api/[feature]/service, authentication, authorization → handlers → sender
 
 ### API Structure
 ```
@@ -72,7 +72,7 @@ Sample API
 9. **utils**: contains utility functions
 
 **Helper/Optional Directories**
-1. **.extra**: mongo script for initialization inside docker, other web assets and documents
+1. **.extra**: postgres sql scripts for initialization inside docker, other web assets and documents
 2. **.github**: CI for tests
 3. **.tools**: api code, RSA key generator, and .env copier
 4. **.vscode**: editor config and debug launch settings

@@ -38,9 +38,9 @@ func (s *service) CreateMessage(
 	query := `
 		INSERT INTO messages (
 			type,
-			msg,
+			msg
 		)
-		VALUES ($1, $2, $3, $4, $5)
+		VALUES ($1, $2)
 		RETURNING
 			id,
 			type,
