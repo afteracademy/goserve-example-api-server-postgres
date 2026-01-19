@@ -284,9 +284,10 @@ func (s *service) BlogSubmission(
 		UPDATE blogs
 		SET
 			submitted = $1,
+			drafted = $2,
 			updated_at = CURRENT_TIMESTAMP
-		WHERE id = $2
-		  AND author_id = $3
+		WHERE id = $3
+		  AND author_id = $4
 		  AND status = TRUE
 	`
 
@@ -294,6 +295,7 @@ func (s *service) BlogSubmission(
 		ctx,
 		query,
 		submit,
+		!submit,
 		blogID,
 		author.ID,
 	)
