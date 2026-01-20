@@ -60,7 +60,6 @@ import (
 
   "github.com/afteracademy/goserve-example-api-server-postgres/api/%s/dto"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/%s/model"
-	"github.com/afteracademy/goserve/v2/network"
 	"github.com/afteracademy/goserve/v2/redis"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/google/uuid"
@@ -71,14 +70,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	db              *pgxpool.Pool
 	info%sCache     redis.Cache[dto.Info%s]
 }
 
 func NewService(db *pgxpool.Pool, store redis.Store) Service {
 	return &service{
-		BaseService:     network.NewBaseService(),
 	  db:              db,
 		info%sCache:     redis.NewCache[dto.Info%s](store),
 	}
@@ -137,7 +134,7 @@ import (
 )
 
 type controller struct {
-	network.BaseController
+	network.Controller
 	common.ContextPayload
 	service Service
 }
@@ -148,7 +145,7 @@ func NewController(
 	service Service,
 ) network.Controller {
 	return &controller{
-		BaseController: network.NewBaseController("/%s", authMFunc, authorizeMFunc),
+		Controller: network.NewController("/%s", authMFunc, authorizeMFunc),
 		ContextPayload: common.NewContextPayload(),
 		service:  service,
 	}
@@ -159,25 +156,25 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) get%sHandler(ctx *gin.Context) {
-	uuidParam, err := network.ReqParams(ctx, coredto.EmptyUUID())
+	uuidParam, err := network.ReqParams[coredto.UUID](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	%s, err := c.service.Find%s(uuidParam.ID)
 	if err != nil {
-		c.Send(ctx).NotFoundError("%s not found", err)
+		network.SendNotFoundError(ctx, "%s not found", err)
 		return
 	}
 
 	data, err := utility.MapTo[dto.Info%s](%s)
 	if err != nil {
-		c.Send(ctx).InternalServerError("something went wrong", err)
+		network.SendInternalServerError(ctx, "something went wrong", err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", data)
+	network.SendSuccessDataResponse(ctx, "success", data)
 }
 `, featureLower, featureLower, featureLower, featureCaps, featureCaps, featureLower, featureCaps, featureLower, featureCaps, featureLower)
 
@@ -230,9 +227,7 @@ func generateDto(featureDir, featureName string) error {
 import (
 	"time"
 
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
-	"github.com/afteracademy/goserve/v2/utility"
 )
 
 type Info%s struct {
@@ -240,20 +235,8 @@ type Info%s struct {
 	Field     string    ` + "`" + `json:"field" binding:"required"` + "`" + `
 	CreatedAt time.Time ` + "`" + `json:"createdAt" binding:"required"` + "`" + `
 }
-
-func EmptyInfo%s() *Info%s {
-	return &Info%s{}
-}
-
-func (d *Info%s) GetValue() *Info%s {
-	return d
-}
-
-func (d *Info%s) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
-}
 `
-	template := fmt.Sprintf(tStr, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps, featureCaps)
+	template := fmt.Sprintf(tStr, featureCaps)
 
 	return os.WriteFile(dtoPath, []byte(template), os.ModePerm)
 }
