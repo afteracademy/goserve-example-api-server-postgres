@@ -3,7 +3,7 @@ module github.com/afteracademy/goserve-example-api-server-postgres
 go 1.25.6
 
 require (
-	github.com/afteracademy/goserve/v2 v2.0.3
+	github.com/afteracademy/goserve/v2 v2.0.4
 	github.com/gin-gonic/gin v1.11.0
 	github.com/golang-jwt/jwt/v5 v5.3.0
 	github.com/google/uuid v1.6.0
