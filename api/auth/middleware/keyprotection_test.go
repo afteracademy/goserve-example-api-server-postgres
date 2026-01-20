@@ -50,7 +50,7 @@ func TestKeyProtectionMiddleware_CorrectApiKey(t *testing.T) {
 
 	mockHandler := func(ctx *gin.Context) {
 		assert.Equal(t, common.NewContextPayload().MustGetApiKey(ctx).Key, key)
-		network.NewResponseSender().Send(ctx).SuccessMsgResponse("success")
+		network.SendSuccessMsgResponse(ctx, "success")
 	}
 
 	rr := network.MockTestRootMiddleware(

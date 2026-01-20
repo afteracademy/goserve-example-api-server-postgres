@@ -6,7 +6,6 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/contact/dto"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/contact/model"
 	coredto "github.com/afteracademy/goserve/v2/dto"
-	"github.com/afteracademy/goserve/v2/network"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
 )
@@ -18,14 +17,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	db *pgxpool.Pool
 }
 
 func NewService(db *pgxpool.Pool) Service {
 	return &service{
-		BaseService: network.NewBaseService(),
-		db:          db,
+		db: db,
 	}
 }
 

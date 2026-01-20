@@ -7,7 +7,7 @@ import (
 )
 
 type controller struct {
-	network.BaseController
+	network.Controller
 	service Service
 }
 
@@ -17,7 +17,7 @@ func NewController(
 	service Service,
 ) network.Controller {
 	return &controller{
-		BaseController: network.NewBaseController("/blog", authMFunc, authorizeMFunc),
+		Controller: network.NewController("/blog", authMFunc, authorizeMFunc),
 		service:        service,
 	}
 }
@@ -28,47 +28,47 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) getBlogByIdHandler(ctx *gin.Context) {
-	uuidParam, err := network.ReqParams(ctx, coredto.EmptyUUID())
+	uuidParam, err := network.ReqParams[coredto.UUID](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blog, err := c.service.GetBlogDtoCacheById(uuidParam.ID)
 	if err == nil {
-		c.Send(ctx).SuccessDataResponse("success", blog)
+		network.SendSuccessDataResponse(ctx, "success", blog)
 		return
 	}
 
 	blog, err = c.service.GetPublisedBlogById(uuidParam.ID)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blog)
+	network.SendSuccessDataResponse(ctx, "success", blog)
 	c.service.SetBlogDtoCacheById(blog)
 }
 
 func (c *controller) getBlogBySlugHandler(ctx *gin.Context) {
-	slug, err := network.ReqParams(ctx, coredto.EmptySlug())
+	slug, err := network.ReqParams[coredto.Slug](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blog, err := c.service.GetBlogDtoCacheBySlug(slug.Slug)
 	if err == nil {
-		c.Send(ctx).SuccessDataResponse("success", blog)
+		network.SendSuccessDataResponse(ctx, "success", blog)
 		return
 	}
 
 	blog, err = c.service.GetPublishedBlogBySlug(slug.Slug)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blog)
+	network.SendSuccessDataResponse(ctx, "success", blog)
 	c.service.SetBlogDtoCacheBySlug(blog)
 }

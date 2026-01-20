@@ -8,7 +8,7 @@ import (
 )
 
 type controller struct {
-	network.BaseController
+	network.Controller
 	service Service
 }
 
@@ -18,8 +18,8 @@ func NewController(
 	service Service,
 ) network.Controller {
 	return &controller{
-		BaseController: network.NewBaseController("/blogs", authMFunc, authorizeMFunc),
-		service:        service,
+		Controller: network.NewController("/blogs", authMFunc, authorizeMFunc),
+		service:    service,
 	}
 }
 
@@ -31,62 +31,62 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) getLatestBlogsHandler(ctx *gin.Context) {
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blogs, err := c.service.GetPaginatedLatestBlogs(pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }
 
 func (c *controller) getTaggedBlogsHandler(ctx *gin.Context) {
-	tag, err := network.ReqParams(ctx, dto.EmptyTag())
+	tag, err := network.ReqParams[dto.Tag](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
-	pagination, err := network.ReqQuery(ctx, coredto.EmptyPagination())
+	pagination, err := network.ReqQuery[coredto.Pagination](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blogs, err := c.service.GetPaginatedTaggedBlogs(tag.Tag, pagination)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 }
 
 func (c *controller) getSimilarBlogsHandler(ctx *gin.Context) {
-	uuidParam, err := network.ReqParams(ctx, coredto.EmptyUUID())
+	uuidParam, err := network.ReqParams[coredto.UUID](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	blogs, err := c.service.GetSimilarBlogsDtoCache(uuidParam.ID)
 	if err == nil {
-		c.Send(ctx).SuccessDataResponse("success", blogs)
+		network.SendSuccessDataResponse(ctx, "success", &blogs)
 		return
 	}
 
 	blogs, err = c.service.GetSimilarBlogs(uuidParam.ID)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", blogs)
+	network.SendSuccessDataResponse(ctx, "success", &blogs)
 	c.service.SetSimilarBlogsDtoCache(uuidParam.ID, blogs)
 }

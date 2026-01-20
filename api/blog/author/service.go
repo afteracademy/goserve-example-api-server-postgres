@@ -28,14 +28,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	db          *pgxpool.Pool
 	blogService blog.Service
 }
 
 func NewService(db *pgxpool.Pool, blogService blog.Service) Service {
 	return &service{
-		BaseService: network.NewBaseService(),
 		db:          db,
 		blogService: blogService,
 	}

@@ -1,8 +1,6 @@
 package dto
 
 import (
-	"github.com/afteracademy/goserve/v2/utility"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -14,16 +12,4 @@ type BlogUpdate struct {
 	Slug        *string   `json:"slug" validate:"omitempty,min=3,max=200"`
 	ImgURL      *string   `json:"imgUrl" validate:"omitempty,uri,max=200"`
 	Tags        *[]string `json:"tags" validate:"omitempty,min=1,dive,uppercase"`
-}
-
-func EmptyBlogUpdate() *BlogUpdate {
-	return &BlogUpdate{}
-}
-
-func (d *BlogUpdate) GetValue() *BlogUpdate {
-	return d
-}
-
-func (b *BlogUpdate) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
 }

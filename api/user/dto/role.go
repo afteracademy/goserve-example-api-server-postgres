@@ -2,14 +2,12 @@ package dto
 
 import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/user/model"
-	"github.com/afteracademy/goserve/v2/utility"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
 type RoleInfo struct {
 	ID   uuid.UUID      `json:"id" binding:"required" validate:"required"`
-	Code model.RoleCode `json:"code" binding:"required" validate:"required,rolecode"`
+	Code model.RoleCode `json:"code" binding:"required" validate:"required,uppercase"`
 }
 
 func NewRoleInfo(role *model.Role) *RoleInfo {
@@ -17,12 +15,4 @@ func NewRoleInfo(role *model.Role) *RoleInfo {
 		ID:   role.ID,
 		Code: role.Code,
 	}
-}
-
-func (d *RoleInfo) GetValue() *RoleInfo {
-	return d
-}
-
-func (d *RoleInfo) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
 }

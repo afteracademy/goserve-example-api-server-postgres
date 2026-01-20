@@ -5,7 +5,6 @@ import (
 
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/blog/model"
 	"github.com/afteracademy/goserve/v2/utility"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -22,16 +21,4 @@ type BlogItem struct {
 
 func NewBlogItem(blog *model.Blog) (*BlogItem, error) {
 	return utility.MapTo[BlogItem](blog)
-}
-
-func EmptyBlogItem() *BlogItem {
-	return &BlogItem{}
-}
-
-func (d *BlogItem) GetValue() *BlogItem {
-	return d
-}
-
-func (b *BlogItem) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
 }

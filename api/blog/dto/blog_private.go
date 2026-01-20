@@ -7,7 +7,6 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/user/dto"
 	userModel "github.com/afteracademy/goserve-example-api-server-postgres/api/user/model"
 	"github.com/afteracademy/goserve/v2/utility"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -30,10 +29,6 @@ type BlogPrivate struct {
 	UpdatedAt   time.Time       `json:"updatedAt" validate:"required"`
 }
 
-func EmptyBlogPrivate() *BlogPrivate {
-	return &BlogPrivate{}
-}
-
 func NewBlogPrivate(blog *model.Blog, author *userModel.User) (*BlogPrivate, error) {
 	b, err := utility.MapTo[BlogPrivate](blog)
 	if err != nil {
@@ -46,12 +41,4 @@ func NewBlogPrivate(blog *model.Blog, author *userModel.User) (*BlogPrivate, err
 	}
 
 	return b, err
-}
-
-func (d *BlogPrivate) GetValue() *BlogPrivate {
-	return d
-}
-
-func (b *BlogPrivate) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
 }

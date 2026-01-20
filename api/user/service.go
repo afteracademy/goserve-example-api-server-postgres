@@ -29,14 +29,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	db *pgxpool.Pool
 }
 
 func NewService(db *pgxpool.Pool) Service {
 	return &service{
-		BaseService: network.NewBaseService(),
-		db:          db,
+		db: db,
 	}
 }
 
@@ -526,4 +524,4 @@ func (s *service) DeleteRole(role *model.Role) (bool, error) {
 	}
 
 	return tag.RowsAffected() > 0, nil
-}	
+}

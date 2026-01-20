@@ -9,7 +9,7 @@ import (
 )
 
 type controller struct {
-	network.BaseController
+	network.Controller
 	common.ContextPayload
 	service Service
 }
@@ -20,7 +20,7 @@ func NewController(
 	service Service,
 ) network.Controller {
 	return &controller{
-		BaseController: network.NewBaseController("/auth", authProvider, authorizeProvider),
+		Controller: network.NewController("/auth", authProvider, authorizeProvider),
 		ContextPayload: common.NewContextPayload(),
 		service:        service,
 	}
@@ -34,35 +34,35 @@ func (c *controller) MountRoutes(group *gin.RouterGroup) {
 }
 
 func (c *controller) signUpBasicHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptySignUpBasic())
+	body, err := network.ReqBody[dto.SignUpBasic](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	data, err := c.service.SignUpBasic(body)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", data)
+	network.SendSuccessDataResponse(ctx, "success", data)
 }
 
 func (c *controller) signInBasicHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptySignInBasic())
+	body, err := network.ReqBody[dto.SignInBasic](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
 	dto, err := c.service.SignInBasic(body)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", dto)
+	network.SendSuccessDataResponse(ctx, "success", dto)
 }
 
 func (c *controller) signOutBasic(ctx *gin.Context) {
@@ -70,17 +70,17 @@ func (c *controller) signOutBasic(ctx *gin.Context) {
 
 	err := c.service.SignOut(keystore)
 	if err != nil {
-		c.Send(ctx).InternalServerError("something went wrong", err)
+		network.SendInternalServerError(ctx, "something went wrong", err)
 		return
 	}
 
-	c.Send(ctx).SuccessMsgResponse("signout success")
+	network.SendSuccessMsgResponse(ctx, "signout success")
 }
 
 func (c *controller) tokenRefreshHandler(ctx *gin.Context) {
-	body, err := network.ReqBody(ctx, dto.EmptyTokenRefresh())
+	body, err := network.ReqBody[dto.TokenRefresh](ctx)
 	if err != nil {
-		c.Send(ctx).BadRequestError(err.Error(), err)
+		network.SendBadRequestError(ctx, err.Error(), err)
 		return
 	}
 
@@ -89,9 +89,9 @@ func (c *controller) tokenRefreshHandler(ctx *gin.Context) {
 
 	dto, err := c.service.RenewToken(body, accessToken)
 	if err != nil {
-		c.Send(ctx).MixedError(err)
+		network.SendMixedError(ctx, err)
 		return
 	}
 
-	c.Send(ctx).SuccessDataResponse("success", dto)
+	network.SendSuccessDataResponse(ctx, "success", dto)
 }

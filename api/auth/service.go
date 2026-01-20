@@ -40,7 +40,6 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	db          *pgxpool.Pool
 	userService user.Service
 	// token
@@ -77,7 +76,6 @@ func NewService(
 	}
 
 	return &service{
-		BaseService: network.NewBaseService(),
 		userService: userService,
 		db:          db,
 		// token key

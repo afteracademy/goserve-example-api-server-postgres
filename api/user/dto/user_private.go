@@ -2,8 +2,6 @@ package dto
 
 import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/user/model"
-	"github.com/afteracademy/goserve/v2/utility"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -28,12 +26,4 @@ func NewUserPrivate(user *model.User) *UserPrivate {
 		ProfilePicURL: user.ProfilePicURL,
 		Roles:         roles,
 	}
-}
-
-func (d *UserPrivate) GetValue() *UserPrivate {
-	return d
-}
-
-func (d *UserPrivate) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
 }

@@ -3,7 +3,6 @@ package dto
 import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/blog/model"
 	"github.com/afteracademy/goserve/v2/utility"
-	"github.com/go-playground/validator/v10"
 	"github.com/google/uuid"
 )
 
@@ -19,16 +18,4 @@ type BlogInfo struct {
 
 func NewBlogInfo(blog *model.Blog) (*BlogInfo, error) {
 	return utility.MapTo[BlogInfo](blog)
-}
-
-func EmptyBlogInfo() *BlogInfo {
-	return &BlogInfo{}
-}
-
-func (d *BlogInfo) GetValue() *BlogInfo {
-	return d
-}
-
-func (d *BlogInfo) ValidateErrors(errs validator.ValidationErrors) ([]string, error) {
-	return utility.FormatValidationErrors(errs), nil
 }

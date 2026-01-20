@@ -24,14 +24,12 @@ type Service interface {
 }
 
 type service struct {
-	network.BaseService
 	db            *pgxpool.Pool
 	itemBlogCache redis.Cache[dto.BlogItem]
 }
 
 func NewService(db *pgxpool.Pool, store redis.Store) Service {
 	return &service{
-		BaseService:   network.NewBaseService(),
 		db:            db,
 		itemBlogCache: redis.NewCache[dto.BlogItem](store),
 	}

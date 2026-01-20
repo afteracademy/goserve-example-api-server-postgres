@@ -192,7 +192,7 @@ func TestAuthenticationProvider_Success(t *testing.T) {
 	mockHandler := func(ctx *gin.Context) {
 		assert.Equal(t, common.NewContextPayload().MustGetUser(ctx).ID, userId)
 		assert.Equal(t, common.NewContextPayload().MustGetKeystore(ctx).ID, keystoreId)
-		network.NewResponseSender().Send(ctx).SuccessMsgResponse("success")
+		network.SendSuccessMsgResponse(ctx, "success")
 	}
 
 	rr := network.MockTestAuthenticationProvider(
