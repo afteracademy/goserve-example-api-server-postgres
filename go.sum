@@ -1,5 +1,5 @@
-github.com/afteracademy/goserve/v2 v2.0.4 h1:llMrC2L2b5ZKr3t9yWP2SlzlHtOa3I6sXje3gPEDN/s=
-github.com/afteracademy/goserve/v2 v2.0.4/go.mod h1:zhdI7XeDYrycWLRoNwwf1aITdEF9KbKZERxgllzv7/w=
+github.com/afteracademy/goserve/v2 v2.1.1 h1:RegiXqul93La9n6VYsSbHy1Wdg7wJl9QtLLmlgqkGWE=
+github.com/afteracademy/goserve/v2 v2.1.1/go.mod h1:zhdI7XeDYrycWLRoNwwf1aITdEF9KbKZERxgllzv7/w=
 github.com/bsm/ginkgo/v2 v2.12.0 h1:Ny8MWAHyOepLGlLKYmXG4IEkioBysk6GpaRTLC8zwWs=
 github.com/bsm/ginkgo/v2 v2.12.0/go.mod h1:SwYbGRRDovPVboqFv0tPTcG1sN61LM1Z4ARdbAV9g4c=
 github.com/bsm/gomega v1.27.10 h1:yeMWxP2pV2fG3FgAODIY8EiRE3dy0aeFYt4l7wh6yKA=
