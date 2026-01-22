@@ -12,8 +12,8 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/utils"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service interface {
@@ -28,11 +28,11 @@ type Service interface {
 }
 
 type service struct {
-	db          *pgxpool.Pool
+	db          postgres.Database
 	blogService blog.Service
 }
 
-func NewService(db *pgxpool.Pool, blogService blog.Service) Service {
+func NewService(db postgres.Database, blogService blog.Service) Service {
 	return &service{
 		db:          db,
 		blogService: blogService,
@@ -85,7 +85,7 @@ func (s *service) CreateBlog(
 			status
 	`
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		d.Title,
@@ -138,7 +138,7 @@ func (s *service) UpdateBlog(
 	var blogID uuid.UUID
 	var currentSlug string
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		selectQuery,
 		b.ID,
@@ -225,7 +225,7 @@ func (s *service) UpdateBlog(
 
 	args = append(args, blogID, author.ID)
 
-	tag, err := s.db.Exec(ctx, updateQuery, args...)
+	tag, err := s.db.Pool().Exec(ctx, updateQuery, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -254,7 +254,7 @@ func (s *service) DeactivateBlog(
 		  AND status = TRUE
 	`
 
-	tag, err := s.db.Exec(
+	tag, err := s.db.Pool().Exec(
 		ctx,
 		query,
 		blogID,
@@ -289,7 +289,7 @@ func (s *service) BlogSubmission(
 		  AND status = TRUE
 	`
 
-	tag, err := s.db.Exec(
+	tag, err := s.db.Pool().Exec(
 		ctx,
 		query,
 		submit,
@@ -341,7 +341,7 @@ func (s *service) GetBlogById(
 
 	var b model.Blog
 
-	err := s.db.QueryRow(ctx, query, id, author.ID).
+	err := s.db.Pool().QueryRow(ctx, query, id, author.ID).
 		Scan(
 			&b.ID,
 			&b.Title,
@@ -450,7 +450,7 @@ func (s *service) getPaginated(
 	ctx := context.Background()
 	offset := (p.Page - 1) * p.Limit
 
-	rows, err := s.db.Query(ctx, query, author.ID, p.Limit, offset)
+	rows, err := s.db.Pool().Query(ctx, query, author.ID, p.Limit, offset)
 	if err != nil {
 		return nil, err
 	}

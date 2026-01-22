@@ -9,10 +9,10 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/blog/model"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/user"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/afteracademy/goserve/v2/redis"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service interface {
@@ -26,12 +26,12 @@ type Service interface {
 }
 
 type service struct {
-	db              *pgxpool.Pool
+	db              postgres.Database
 	publicBlogCache redis.Cache[dto.BlogPublic]
 	userService     user.Service
 }
 
-func NewService(db *pgxpool.Pool, store redis.Store, userService user.Service) Service {
+func NewService(db postgres.Database, store redis.Store, userService user.Service) Service {
 	return &service{
 		db:              db,
 		publicBlogCache: redis.NewCache[dto.BlogPublic](store),
@@ -70,7 +70,7 @@ func (s *service) BlogSlugExists(slug string) bool {
 	`
 
 	var exists bool
-	err := s.db.QueryRow(context.Background(), query, slug).Scan(&exists)
+	err := s.db.Pool().QueryRow(context.Background(), query, slug).Scan(&exists)
 	if err != nil {
 		return false
 	}
@@ -101,7 +101,7 @@ func (s *service) GetPublisedBlogById(blogID uuid.UUID) (*dto.BlogPublic, error)
 
 	var b model.Blog
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		blogID,
@@ -156,7 +156,7 @@ func (s *service) GetPublishedBlogBySlug(slug string) (*dto.BlogPublic, error) {
 
 	var b model.Blog
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		slug,

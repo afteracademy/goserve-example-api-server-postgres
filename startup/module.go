@@ -23,7 +23,7 @@ type Module network.Module[module]
 type module struct {
 	Context     context.Context
 	Env         *config.Env
-	DB          postgres.Database
+	Db          postgres.Database
 	Store       redis.Store
 	UserService user.Service
 	AuthService auth.Service
@@ -39,10 +39,10 @@ func (m *module) Controllers() []network.Controller {
 		auth.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.AuthService),
 		user.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.UserService),
 		blog.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.BlogService),
-		author.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), author.NewService(m.DB.Pool(), m.BlogService)),
-		editor.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), editor.NewService(m.DB.Pool(), m.UserService)),
-		blogs.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), blogs.NewService(m.DB.Pool(), m.Store)),
-		contact.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), contact.NewService(m.DB.Pool())),
+		author.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), author.NewService(m.Db, m.BlogService)),
+		editor.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), editor.NewService(m.Db, m.UserService)),
+		blogs.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), blogs.NewService(m.Db, m.Store)),
+		contact.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), contact.NewService(m.Db)),
 	}
 }
 
@@ -63,14 +63,14 @@ func (m *module) AuthorizationProvider() network.AuthorizationProvider {
 }
 
 func NewModule(context context.Context, env *config.Env, db postgres.Database, store redis.Store) Module {
-	userService := user.NewService(db.Pool())
-	authService := auth.NewService(db.Pool(), env, userService)
-	blogService := blog.NewService(db.Pool(), store, userService)
+	userService := user.NewService(db)
+	authService := auth.NewService(db, env, userService)
+	blogService := blog.NewService(db, store, userService)
 
 	return &module{
 		Context:     context,
 		Env:         env,
-		DB:          db,
+		Db:          db,
 		Store:       store,
 		UserService: userService,
 		AuthService: authService,

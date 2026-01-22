@@ -9,10 +9,10 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/blogs/dto"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/afteracademy/goserve/v2/redis"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service interface {
@@ -24,11 +24,11 @@ type Service interface {
 }
 
 type service struct {
-	db            *pgxpool.Pool
+	db            postgres.Database
 	itemBlogCache redis.Cache[dto.BlogItem]
 }
 
-func NewService(db *pgxpool.Pool, store redis.Store) Service {
+func NewService(db postgres.Database, store redis.Store) Service {
 	return &service{
 		db:            db,
 		itemBlogCache: redis.NewCache[dto.BlogItem](store),
@@ -86,7 +86,7 @@ func (s *service) GetPaginatedTaggedBlogs(tag string, p *coredto.Pagination) ([]
 	ctx := context.Background()
 	offset := (p.Page - 1) * p.Limit
 
-	rows, err := s.db.Query(ctx, query, tag, p.Limit, offset)
+	rows, err := s.db.Pool().Query(ctx, query, tag, p.Limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -131,7 +131,7 @@ func (s *service) GetSimilarBlogs(
 	ctx := context.Background()
 	var title string
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		`
 		SELECT title
@@ -176,7 +176,7 @@ func (s *service) GetSimilarBlogs(
 		LIMIT 6
 	`
 
-	rows, err := s.db.Query(ctx, query, title, blogID)
+	rows, err := s.db.Pool().Query(ctx, query, title, blogID)
 	if err != nil {
 		return nil, err
 	}
@@ -247,7 +247,7 @@ func (s *service) getPaginated(
 	ctx := context.Background()
 	offset := (p.Page - 1) * p.Limit
 
-	rows, err := s.db.Query(ctx, query, p.Limit, offset)
+	rows, err := s.db.Pool().Query(ctx, query, p.Limit, offset)
 	if err != nil {
 		return nil, err
 	}

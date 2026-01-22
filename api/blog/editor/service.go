@@ -10,9 +10,9 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/user"
 	coredto "github.com/afteracademy/goserve/v2/dto"
 	"github.com/afteracademy/goserve/v2/network"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service interface {
@@ -23,11 +23,11 @@ type Service interface {
 }
 
 type service struct {
-	db          *pgxpool.Pool
+	db          postgres.Database
 	userService user.Service
 }
 
-func NewService(db *pgxpool.Pool, userService user.Service) Service {
+func NewService(db postgres.Database, userService user.Service) Service {
 	return &service{
 		db:          db,
 		userService: userService,
@@ -60,7 +60,7 @@ func (s *service) BlogPublication(
 		publishedAt *time.Time
 	)
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		selectQuery,
 		blogID,
@@ -130,7 +130,7 @@ func (s *service) BlogPublication(
 		text = nil
 	}
 
-	tag, err := s.db.Exec(
+	tag, err := s.db.Pool().Exec(
 		ctx,
 		updateQuery,
 		!publish,
@@ -180,7 +180,7 @@ func (s *service) GetBlogById(id uuid.UUID) (*dto.BlogPrivate, error) {
 
 	var b model.Blog
 
-	err := s.db.QueryRow(ctx, query, id).
+	err := s.db.Pool().QueryRow(ctx, query, id).
 		Scan(
 			&b.ID,
 			&b.Title,
@@ -264,7 +264,7 @@ func (s *service) getPaginated(
 	ctx := context.Background()
 	offset := (p.Page - 1) * p.Limit
 
-	rows, err := s.db.Query(ctx, query, p.Limit, offset)
+	rows, err := s.db.Pool().Query(ctx, query, p.Limit, offset)
 	if err != nil {
 		return nil, err
 	}

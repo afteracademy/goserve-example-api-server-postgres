@@ -6,8 +6,8 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/contact/dto"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/contact/model"
 	coredto "github.com/afteracademy/goserve/v2/dto"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5/pgxpool"
 )
 
 type Service interface {
@@ -17,10 +17,10 @@ type Service interface {
 }
 
 type service struct {
-	db *pgxpool.Pool
+	db postgres.Database
 }
 
-func NewService(db *pgxpool.Pool) Service {
+func NewService(db postgres.Database) Service {
 	return &service{
 		db: db,
 	}
@@ -47,7 +47,7 @@ func (s *service) CreateMessage(
 			updated_at
 	`
 
-	err := s.db.QueryRow(
+	err := s.db.Pool().QueryRow(
 		ctx,
 		query,
 		dto.Type,
@@ -86,7 +86,7 @@ func (s *service) FetchMessage(
 
 	var m model.Message
 
-	err := s.db.QueryRow(ctx, query, id).
+	err := s.db.Pool().QueryRow(ctx, query, id).
 		Scan(
 			&m.ID,
 			&m.Type,
@@ -123,7 +123,7 @@ func (s *service) FetchPaginatedMessage(
 		LIMIT $1 OFFSET $2
 	`
 
-	rows, err := s.db.Query(ctx, query, p.Limit, offset)
+	rows, err := s.db.Pool().Query(ctx, query, p.Limit, offset)
 	if err != nil {
 		return nil, err
 	}

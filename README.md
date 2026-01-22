@@ -235,7 +235,7 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/sample/dto"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/sample/model"
 	"github.com/afteracademy/goserve/v2/redis"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/afteracademy/goserve/v2/postgres"
 	"github.com/google/uuid"
 )
 
@@ -244,11 +244,11 @@ type Service interface {
 }
 
 type service struct {
-	db							*pgxpool.Pool
+	db							postgres.Database
 	infoSampleCache	redis.Cache[dto.InfoSample]
 }
 
-func NewService(db *pgxpool.Pool, store redis.Store) Service {
+func NewService(db postgres.Database, store redis.Store) Service {
 	return &service{
 		db:								db,
 		infoSampleCache:	redis.NewCache[dto.InfoSample](store),
