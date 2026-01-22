@@ -97,7 +97,7 @@ func (s *service) Find%s(id uuid.UUID) (*model.%s, error) {
 
 	var m model.%s
 
-	err := s.db.QueryRow(ctx, query, id).
+	err := s.db.Pool().QueryRow(ctx, query, id).
 		Scan(
 			&m.ID,
 			&m.Field,
