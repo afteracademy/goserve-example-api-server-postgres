@@ -10,6 +10,7 @@ import (
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/blog/editor"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/blogs"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/contact"
+	"github.com/afteracademy/goserve-example-api-server-postgres/api/health"
 	"github.com/afteracademy/goserve-example-api-server-postgres/api/user"
 	"github.com/afteracademy/goserve-example-api-server-postgres/config"
 	coreMW "github.com/afteracademy/goserve/v2/middleware"
@@ -21,13 +22,14 @@ import (
 type Module network.Module[module]
 
 type module struct {
-	Context     context.Context
-	Env         *config.Env
-	DB          postgres.Database
-	Store       redis.Store
-	UserService user.Service
-	AuthService auth.Service
-	BlogService blog.Service
+	Context       context.Context
+	Env           *config.Env
+	DB            postgres.Database
+	Store         redis.Store
+	UserService   user.Service
+	AuthService   auth.Service
+	BlogService   blog.Service
+	HealthService health.Service
 }
 
 func (m *module) GetInstance() *module {
@@ -36,6 +38,7 @@ func (m *module) GetInstance() *module {
 
 func (m *module) Controllers() []network.Controller {
 	return []network.Controller{
+		health.NewController(m.HealthService),
 		auth.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.AuthService),
 		user.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.UserService),
 		blog.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.BlogService),
@@ -66,14 +69,16 @@ func NewModule(context context.Context, env *config.Env, db postgres.Database, s
 	userService := user.NewService(db)
 	authService := auth.NewService(db, env, userService)
 	blogService := blog.NewService(db, store, userService)
+	healthService := health.NewService()
 
 	return &module{
-		Context:     context,
-		Env:         env,
-		DB:          db,
-		Store:       store,
-		UserService: userService,
-		AuthService: authService,
-		BlogService: blogService,
+		Context:       context,
+		Env:           env,
+		DB:            db,
+		Store:         store,
+		UserService:   userService,
+		AuthService:   authService,
+		BlogService:   blogService,
+		HealthService: healthService,
 	}
 }

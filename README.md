@@ -128,7 +128,7 @@ docker compose up --build
 **5. Run Tests**
 
 ```bash
-docker exec -t goserve_example_api_server_postgres go test -v ./...
+docker exec -t goserver-postgres go test -v ./...
 ```
 
 If having any issue
@@ -143,7 +143,7 @@ If having any issue
 go mod tidy
 ```
 
-Keep the docker container for `postgres` and `redis` running and **stop** the `goserve_example_api_server_postgres` docker container
+Keep the docker container for `postgres` and `redis` running and **stop** the `goserver-postgres` docker container
 
 Change the following hosts in the **.env** and **.test.env**
 

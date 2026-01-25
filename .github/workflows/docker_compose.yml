@@ -22,8 +22,22 @@ jobs:
       run: docker compose build
     - name: Run docker images
       run: docker compose up -d
+    - name: Wait for API health
+      run: |
+        echo "Waiting for API to become healthy..."
+        for i in {1..30}; do
+          STATUS=$(docker inspect --format='{{.State.Health.Status}}' goserver-postgres)
+          if [ "$STATUS" = "healthy" ]; then
+            echo "API is healthy"
+            exit 0
+          fi
+          sleep 2
+        done
+        echo "API did not become healthy in time"
+        docker logs goserver-postgres
+        exit 1
     - name: Run tests
-      run: docker exec -t goserve_example_api_server_postgres go test -v ./...
+      run: docker exec -t goserver-postgres go test -v ./...
     - name: Clean up
       if: success() || failure()
       run: docker compose down --rmi all -v --remove-orphans

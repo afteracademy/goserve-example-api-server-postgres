@@ -1,6 +1,8 @@
 # Use Go v1.25.6 as the base image
 FROM golang:1.25.6-alpine
 
+RUN apk add --no-cache curl
+
 # Create a new user in the docker image
 RUN adduser --disabled-password --gecos '' gouser
 
