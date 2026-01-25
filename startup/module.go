@@ -36,9 +36,13 @@ func (m *module) GetInstance() *module {
 	return m
 }
 
+// OpenControllers are controllers that do not require api key authentication
+func (m *module) OpenControllers() []network.Controller {
+	return []network.Controller{health.NewController(m.HealthService)}
+}
+
 func (m *module) Controllers() []network.Controller {
 	return []network.Controller{
-		health.NewController(m.HealthService),
 		auth.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.AuthService),
 		user.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.UserService),
 		blog.NewController(m.AuthenticationProvider(), m.AuthorizationProvider(), m.BlogService),

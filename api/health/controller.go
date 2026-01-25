@@ -20,7 +20,7 @@ func NewController(
 }
 
 func (c *controller) MountRoutes(group *gin.RouterGroup) {
-	group.GET("/", c.getHealthHandler)
+	group.GET("", c.getHealthHandler)
 }
 
 func (c *controller) getHealthHandler(ctx *gin.Context) {

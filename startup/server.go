@@ -50,6 +50,7 @@ func create(env *config.Env) (network.Router, Module, Shutdown) {
 
 	router := network.NewRouter(env.GoMode)
 	router.RegisterValidationParsers(network.CustomTagNameFunc())
+	router.LoadControllers(module.GetInstance().OpenControllers())
 	router.LoadRootMiddlewares(module.RootMiddlewares())
 	router.LoadControllers(module.Controllers())
 
