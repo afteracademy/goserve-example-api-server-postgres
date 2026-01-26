@@ -20,7 +20,7 @@ func NewController(
 	service Service,
 ) network.Controller {
 	return &controller{
-		Controller: network.NewController("/blog/editor", authMFunc, authorizeMFunc),
+		Controller:     network.NewController("/blog/editor", authMFunc, authorizeMFunc),
 		ContextPayload: common.NewContextPayload(),
 		service:        service,
 	}

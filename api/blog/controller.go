@@ -18,7 +18,7 @@ func NewController(
 ) network.Controller {
 	return &controller{
 		Controller: network.NewController("/blog", authMFunc, authorizeMFunc),
-		service:        service,
+		service:    service,
 	}
 }
 

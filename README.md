@@ -1,184 +1,214 @@
-# goserve - Go Backend Architecture
-
 [![Docker Compose CI](https://github.com/afteracademy/goserve-example-api-server-postgres/actions/workflows/docker_compose.yml/badge.svg)](https://github.com/afteracademy/goserve-example-api-server-postgres/actions/workflows/docker_compose.yml)
 [![Architechture](https://img.shields.io/badge/Framework-blue?label=View&logo=go)](https://github.com/afteracademy/goserve)
 [![Starter Project](https://img.shields.io/badge/Starter%20Project%20CLI-red?label=Get&logo=go)](https://github.com/afteracademy/goservegen)
 [![Download](https://img.shields.io/badge/Download-Starter%20Project%20Postgres%20Zip-green.svg)](https://github.com/afteracademy/goservegen/raw/main/starter-project-postgres.zip)
 
+<div align="center">
+
+# PostgreSQL API Server Example
+
+### Production-Ready Blog Service with GoServe Framework
+
 ![Banner](.extra/docs/goserve-banner.png)
 
-## Create A Blog Service
+**A complete, production-ready REST API service built with GoServe framework, PostgreSQL, Redis, JWT authentication, and role-based authorization.**
 
-This project is a fully production-ready solution designed to implement best practices for building performant and secure backend REST API services. It provides a robust architectural framework to ensure consistency and maintain high code quality. The architecture emphasizes feature separation, facilitating easier unit and integration testing. It is built using the `goserve` framework, which offers essential functionalities such as authentication, authorization, database connectivity, and caching.
+[![Documentation](https://img.shields.io/badge/📚_Read_Documentation-goserve.afteracademy.com-blue?style=for-the-badge)](http://goserve.afteracademy.com/postgres)
 
-## Framework Libs
+---
+[![GoServe Framework](https://img.shields.io/badge/🚀_Framework-GoServe-blue?style=for-the-badge)](https://github.com/afteracademy/goserve)
+[![API Documentation](https://img.shields.io/badge/📚_API_Docs-View_Here-blue?style=for-the-badge)](https://documenter.getpostman.com/view/1552895/2sBXVihVLg)
+[![Download Starter](https://img.shields.io/badge/⬇️_Download-Starter_Project-green?style=for-the-badge)](https://github.com/afteracademy/goservegen/raw/main/starter-project-postgres.zip)
+---
+</div>
 
-- Go
-- goserve v2
-- Gin
-- jwt
-- postgres
-- pgx
-- go-redis
-- Validator
-- Viper
-- Crypto
+## Overview
 
-**Highlights**
+This project is a fully production-ready blog service demonstrating best practices for building performant and secure backend REST API services with PostgreSQL. It showcases the application of the [GoServe framework](https://github.com/afteracademy/goserve) with clean architecture, feature separation, comprehensive testing, and production grade security.
 
-- REST API design
-- goserve framework usage
-- API key support
-- Token based Authentication
-- Role based Authorization
-- Unit Tests
-- Integration Tests
-- Modular codebase
+## Features
 
-## Architecture
+- **GoServe Framework** - Built on the production-ready [GoServe v2](https://github.com/afteracademy/goserve) framework
+- **Clean Architecture** - Well-structured, maintainable codebase with clear separation of concerns
+- **PostgreSQL Integration** - Full PostgreSQL support with migrations and type-safe queries
+- **Redis Caching** - High-performance caching layer for frequently accessed data
+- **JWT Authentication** - Secure token-based authentication with refresh tokens
+- **Role-Based Authorization** - Fine-grained access control with role management
+- **API Key Support** - Additional security layer for API access control
+- **Request Validation** - Comprehensive input validation using validator v10
+- **Testing Suite** - Extensive unit and integration test coverage
+- **Docker Ready** - Complete Docker Compose setup for easy deployment
+- **Auto-Generated APIs** - CLI tool for scaffolding new API endpoints
+- **Type-Safe DTOs** - Structured data transfer objects for all requests/responses
 
-The goal is to make each API independent from one another and only share services among them. This will make code reusable and reduce conflicts while working in a team.
+## Technology Stack
 
-The APIs will have separate directory based on the endpoint. Example `blog` and `blogs` will have seperate directory whereas `blog`, `blog/author`, and `blog/editor` will share common resources and will live inside same directory.
+- **Language**: Go 1.21+
+- **Framework**: [GoServe v2](https://github.com/afteracademy/goserve)
+- **Web Framework**: [Gin](https://github.com/gin-gonic/gin)
+- **Database**: PostgreSQL ([pgx](https://github.com/jackc/pgx))
+- **Migrations**: [golang-migrate](https://github.com/golang-migrate/migrate)
+- **Cache**: Redis ([go-redis](https://github.com/redis/go-redis))
+- **Authentication**: JWT tokens
+- **Validation**: [validator](https://github.com/go-playground/validator)
+- **Configuration**: [Viper](https://github.com/spf13/viper)
+- **Testing**: [Testify](https://github.com/stretchr/testify)
 
-## Know More on goserve framework
+## Quick Start
 
-- [GitHub - afteracademy/goserve](https://github.com/afteracademy/goserve)
+### Prerequisites
 
-### Startup Flow
+- Docker & Docker Compose ([Installation Guide](https://docs.docker.com/install/))
+- Go 1.21+ (for local development)
 
-cmd/main → startup/server → module, postgres, redis, router → api/[feature]/middlewares → api/[feature]/controller -> api/[feature]/service, authentication, authorization → handlers → sender
+### Installation
 
-### API Structure
-
-```
-Sample API
-├── dto
-│   └── create_sample.go
-├── model
-│   └── sample.go
-├── controller.go
-└── service.go
-```
-
-- Each feature API lives under `api` directory
-- The request and response body is sent in the form of a DTO (Data Transfer Object) inside `dto` directory
-- The database collection model lives inside `model` directory
-- Controller is responsible for defining endpoints and corresponding handlers
-- Service is the main logic component and handles data. Controller interact with a service to process a request. A service can also interact with other services.
-
-## Project Directories
-
-1. **api**: APIs code
-2. **cmd**: main function to start the program
-3. **common**: code to be used in all the apis
-4. **config**: load environment variables
-5. **keys**: stores server pem files for token
-6. **startup**: creates server and initializes database, redis, and router
-7. **tests**: holds the integration tests
-8. **utils**: contains utility functions
-
-**Helper/Optional Directories**
-
-1. **.extra**: postgres sql scripts for initialization inside docker, other web assets and documents
-2. **.github**: CI for tests
-3. **.tools**: api code, RSA key generator, and .env copier
-4. **.vscode**: editor config and debug launch settings
-
-## API Design
-
-![Request-Response-Design](.extra/docs/request-flow.svg)
-
-### API DOC
-
-[![API Documentation](https://img.shields.io/badge/API%20Documentation-View%20Here-blue?style=for-the-badge)](https://documenter.getpostman.com/view/1552895/2sBXVihVLg)
-
-## Installation Instructions
-
-vscode is the recommended editor - dark theme
-
-**1. Get the repo**
+**1. Clone the Repository**
 
 ```bash
 git clone https://github.com/afteracademy/goserve-example-api-server-postgres.git
+cd goserve-example-api-server-postgres
 ```
 
 **2. Generate RSA Keys**
-
-```
+```bash
 go run .tools/rsa/keygen.go
 ```
 
-**3. Create .env files**
-
+**3. Create Environment Files**
+```bash
+go run .tools/copy/envs.go 
 ```
-go run .tools/copy/envs.go
-```
 
-**4. Run Docker Compose**
-
-- Install Docker and Docker Compose. [Find Instructions Here](https://docs.docker.com/install/).
-
+**4. Start with Docker Compose**
 ```bash
 docker compose up --build
 ```
 
-- You will be able to access the api from http://localhost:8080
+The API server will be available at: **http://localhost:8080**
 
-**5. Run Tests**
+**5. Health Check**
+```bash
+docker inspect --format='{{.State.Health.Status}}' goserver-postgres
+```
 
+**6. Run Tests**
 ```bash
 docker exec -t goserver-postgres go test -v ./...
 ```
 
-If having any issue
+### Troubleshooting
 
-- Make sure 8080 port is not occupied else change SERVER_PORT in **.env** file.
-- Make sure 5432 port is not occupied else change DB_PORT in **.env** file.
-- Make sure 6379 port is not occupied else change REDIS_PORT in **.env** file.
+If you encounter issues:
+- Ensure port 8080 is available (change `SERVER_PORT` in `.env` if needed)
+- Ensure port 5432 is available (change `DB_PORT` in `.env` if needed)
+- Ensure port 6379 is available (change `REDIS_PORT` in `.env` if needed)
 
-## Run on the local machine
+## Local Development
+
+For local development without Docker:
 
 ```bash
 go mod tidy
 ```
 
-Keep the docker container for `postgres` and `redis` running and **stop** the `goserver-postgres` docker container
+Keep Docker containers for `postgres` and `redis` running, but stop the `goserver-postgres` container.
 
-Change the following hosts in the **.env** and **.test.env**
+Update the following in `.env` and `.test.env`:
+```env
+DB_HOST=localhost
+REDIS_HOST=localhost
+```
 
-- DB_HOST=localhost
-- REDIS_HOST=localhost
-
-Best way to run this project is to use the vscode `Run and Debug` button. Scripts are available for debugging and template generation on vscode.
-
-### Optional - Running the app from terminal
-
+**Run the application:**
 ```bash
 go run cmd/main.go
 ```
 
-## Template
+**Or use VS Code**: Use the `Run and Debug` panel for an enhanced development experience.
 
-New api creation can be done using command. `go run .tools/apigen.go [feature_name]`. This will create all the required skeleton files inside the directory api/[feature_name]
+## Architecture
+
+### Design Principles
+
+The architecture is designed to make each API independent while sharing services among them. This promotes:
+- **Code Reusability** - Shared services across multiple endpoints
+- **Team Collaboration** - Reduced conflicts when working in teams
+- **Feature Isolation** - Easier testing and maintenance
+
+### Request Flow
+
+![Request-Response-Design](.extra/docs/request-flow.svg)
+
+**Startup Flow:**  
+`cmd/main` → `startup/server` → `module, postgres, redis, router` → `api/[feature]/middlewares` → `api/[feature]/controller` → `api/[feature]/service` → `authentication, authorization` → `handlers` → `response`
+
+### API Structure
+
+```
+Sample API
+├── dto/
+│   └── create_sample.go     # Data Transfer Objects
+├── model/
+│   └── sample.go            # PostgreSQL Table Model
+├── middleware/              # (Optional) Feature-specific middleware
+│   └── custom.go
+├── controller.go            # Route definitions & handlers
+└── service.go              # Business logic & data operations
+```
+
+**Key Components:**
+- **DTOs** - Request/response body definitions in `dto/` directory
+- **Models** - PostgreSQL table models in `model/` directory
+- **Controller** - Defines endpoints and handles HTTP requests
+- **Service** - Contains business logic and data operations
+- **Middleware** - Authentication, authorization, and custom middleware
+
+### Project Structure
+
+| Directory | Purpose |
+|-----------|---------|
+| **api/** | Feature-based API implementations |
+| **cmd/** | Application entry point (main.go) |
+| **common/** | Shared code across all APIs |
+| **config/** | Environment variable configuration |
+| **keys/** | RSA keys for JWT token signing |
+| **migrations/** | PostgreSQL database migration files |
+| **startup/** | Server initialization, DB, Redis, routing |
+| **tests/** | Integration test suites |
+| **utils/** | Utility functions |
+
+**Helper Directories:**
+- **.extra/** - PostgreSQL initialization scripts, assets, documentation
+- **.github/** - CI/CD workflows
+- **.tools/** - Code generators, key generation utilities
+- **.vscode/** - Editor configuration and debug settings
+
+## Generate New APIs
+
+Scaffold a new API endpoint with a single command:
 
 ```bash
 go run .tools/apigen.go sample
 ```
 
-## Read the Article to understand this project
+This creates the complete structure under `api/sample/` with:
+- Model definitions
+- DTO templates
+- Controller skeleton
+- Service interface
 
-[How to Architect Good Go Backend REST API Services](https://afteracademy.com/article/how-to-architect-good-go-backend-rest-api-services)
+## API Documentation
 
-## How to use this architecture in your project?
+<div align="center">
 
-You can use [goservegen](https://github.com/afteracademy/goservegen) CLI to generate starter project for this architecture.
+[![API Documentation](https://img.shields.io/badge/📚_View_Full_API_Documentation-blue?style=for-the-badge)](https://documenter.getpostman.com/view/1552895/2sBXVihVLg)
 
-> Check out the repo [github.com/afteracademy/goservegen](https://github.com/afteracademy/goservegen) for more information.
+Complete API documentation with request/response examples and authentication details
 
-## Documentation
+</div>
 
-Information about the framework
+## Code Examples
 
 ### Model
 
@@ -361,9 +391,7 @@ func (c *controller) getSampleHandler(ctx *gin.Context) {
 }
 ```
 
-#### Notes: The Controller implements the interface
-
-`github.com/afteracademy/goserve/v2/network/interfaces.go`
+**Controller Interface:** Implements `github.com/afteracademy/goserve/v2/network.Controller`
 
 ```golang
 type Controller interface {
@@ -377,9 +405,9 @@ type BaseController interface {
 	Authentication() gin.HandlerFunc
 	Authorization(role string) gin.HandlerFunc
 }
-```
+``` 
 
-### Enable Controller In Module
+### Register Controller
 
 `startup/module.go`
 
@@ -399,22 +427,74 @@ func (m *module) Controllers() []network.Controller {
 }
 ```
 
-## Go Microservices Architecture using goserve
+## Related Projects
 
-`goserve` also provides `micro` package to build REST API microservices. Find the microservices version of this blog service project at [github.com/afteracademy/gomicro](https://github.com/afteracademy/gomicro)
+Explore other GoServe example implementations:
 
-[Article - How to Create Microservices — A Practical Guide Using Go](https://afteracademy.com/article/how-to-create-microservices-a-practical-guide-using-go)
+1. **[GoServe Framework](https://github.com/afteracademy/goserve)**  
+   Core framework with PostgreSQL, MongoDB, Redis, and NATS support
 
-## Find this project useful ? :heart:
+2. **[MongoDB API Server](https://github.com/afteracademy/goserve-example-api-server-mongo)**  
+   Complete REST API with MongoDB and clean architecture
 
-- Support it by clicking the :star: button on the upper right of this page. :v:
+3. **[Microservices Example](https://github.com/afteracademy/gomicro)**  
+   NATS-based microservices communication patterns
 
-## More on YouTube channel - AfterAcademy
+## Generate Starter Project
 
-Subscribe to the YouTube channel `AfterAcademy` for understanding the concepts used in this project:
+Use the [GoServeGen](https://github.com/afteracademy/goservegen) CLI to generate a starter project:
+
+```bash
+# Install GoServeGen CLI
+go install github.com/afteracademy/goservegen@latest
+
+# Generate a new project
+goservegen create my-project --db=postgres
+```
+
+Or download the starter project directly:
+- [PostgreSQL Starter Project (ZIP)](https://github.com/afteracademy/goservegen/raw/main/starter-project-postgres.zip)
+
+## Articles & Tutorials
+
+- [How to Architect Good Go Backend REST API Services](https://afteracademy.com/article/how-to-architect-good-go-backend-rest-api-services)
+- [How to Create Microservices — A Practical Guide Using Go](https://afteracademy.com/article/how-to-create-microservices-a-practical-guide-using-go)
+- [Implement JSON Web Token (JWT) Authentication using AccessToken and RefreshToken](https://afteracademy.com/article/implement-json-web-token-jwt-authentication-using-access-token-and-refresh-token)
+
+## Contributing
+
+We welcome contributions! Please feel free to:
+
+- **Fork** the repository
+- **Open** issues for bugs or feature requests
+- **Submit** pull requests with improvements
+- **Share** your feedback and suggestions
+
+## Learn More
+
+Subscribe to **AfterAcademy** on YouTube for in-depth tutorials and concept explanations:
 
 [![YouTube](https://img.shields.io/badge/YouTube-Subscribe-red?style=for-the-badge&logo=youtube&logoColor=white)](https://www.youtube.com/@afteracad)
 
-## Contribution
+## License
 
-Please feel free to fork it and open a PR.
+This project is licensed under the Apache License 2.0 - see the [LICENSE](LICENSE) file for details.
+
+## Support This Project
+
+If you find this project useful, please consider:
+
+- **Starring** ⭐ this repository
+- **Sharing** with the community
+- **Contributing** improvements
+- **Reporting** bugs and issues
+
+---
+
+<div align="center">
+
+**Built with love by [AfterAcademy](https://github.com/afteracademy)**
+
+[GoServe Framework](https://github.com/afteracademy/goserve) • [API Documentation](https://documenter.getpostman.com/view/1552895/2sBXVihVLg) • [Articles](https://afteracademy.com) • [YouTube](https://www.youtube.com/@afteracad)
+
+</div>
